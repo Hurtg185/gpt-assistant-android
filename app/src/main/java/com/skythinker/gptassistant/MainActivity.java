@@ -1314,6 +1314,7 @@ public class MainActivity extends Activity {
                                 if (choices != null && !choices.isEmpty()) {
                                     JSONObject delta = choices.getJSONObject(0).getJSONObject("delta");
                                     
+                                    // 处理文本内容
                                     if (delta != null && delta.containsKey("content")) {
                                         String content = delta.getStr("content");
                                         if (content != null) {
@@ -1326,6 +1327,7 @@ public class MainActivity extends Activity {
                                         }
                                     }
                                     
+                                    // 处理函数调用（联网搜索）
                                     if (delta != null && delta.containsKey("tool_calls")) {
                                         JSONArray toolCalls = delta.getJSONArray("tool_calls");
                                         JSONObject toolCall = toolCalls.getJSONObject(0);
@@ -1341,19 +1343,22 @@ public class MainActivity extends Activity {
                                     }
                                 }
                             } catch (Exception e) {
+                                // 忽略解析错误
                             }
                         }
                     }
 
+                    // 网络流结束后的处理逻辑
                     runOnUiThread(() -> {
                         if (isFunctionCall) {
+                            // 如果是联网搜索请求，去抓取网页
                             handleFunctionCall(currentToolId, currentFunctionName, functionArgsBuffer.toString());
                         } else {
-                            } else {
+                            // 如果是普通对话，保存消息并读出最后一段话（回译）
                             multiChatList.add(new ChatMessage(ChatRole.ASSISTANT).setText(chatApiBuffer));
                             ((LinearLayout) tvGptReply.getParent()).setTag(multiChatList.get(multiChatList.size() - 1));
                             
-                            // ★★★ 核心修复：对话彻底结束时，强行读出最后一段剩下的回译文字 ★★★
+                            // ★★★ 核心修复：强行读出最后剩下的回译内容 ★★★
                             if (currentTemplateParams.getBool("speak", ttsEnabled)) {
                                 String remaining = chatApiBuffer.substring(ttsSentenceEndIndex).trim();
                                 if (!remaining.isEmpty()) {
