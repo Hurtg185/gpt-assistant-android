@@ -1349,14 +1349,20 @@ public class MainActivity extends Activity {
                         if (isFunctionCall) {
                             handleFunctionCall(currentToolId, currentFunctionName, functionArgsBuffer.toString());
                         } else {
+                            } else {
                             multiChatList.add(new ChatMessage(ChatRole.ASSISTANT).setText(chatApiBuffer));
                             ((LinearLayout) tvGptReply.getParent()).setTag(multiChatList.get(multiChatList.size() - 1));
                             
-                            if (currentTemplateParams.getBool("speak", ttsEnabled) && chatApiBuffer.length() > ttsSentenceEndIndex) {
-                                ttsManager.speak(chatApiBuffer.substring(ttsSentenceEndIndex));
+                            // ★★★ 核心修复：对话彻底结束时，强行读出最后一段剩下的回译文字 ★★★
+                            if (currentTemplateParams.getBool("speak", ttsEnabled)) {
+                                String remaining = chatApiBuffer.substring(ttsSentenceEndIndex).trim();
+                                if (!remaining.isEmpty()) {
+                                    ttsManager.speak(remaining);
+                                }
                             }
                             
                             btSend.setImageResource(R.drawable.ic_send_round);
+                            ttsSentenceEndIndex = 0; // 重置索引
                         }
                     });
                 }
