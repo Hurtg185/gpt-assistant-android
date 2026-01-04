@@ -4,14 +4,13 @@ plugins {
 }
 
 android {
-    // 任务要求 compileSdkVersion 33
+    // 适配 Android 13 (API 33)
     compileSdk 33
 
     defaultConfig {
         applicationId "com.skythinker.gptassistant"
-        // 任务要求 minSdkVersion 24
+        // 兼容 Android 7.0 及以上
         minSdk 24
-        // 对应 compileSdk
         targetSdk 33
         versionCode 21
         versionName "2.0.0"
@@ -27,6 +26,7 @@ android {
     }
 
     compileOptions {
+        // 核心要求：Java 8
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -46,22 +46,30 @@ android {
             exclude group: 'org.jetbrains', module: 'annotations'
         }
     }
+    
     namespace 'com.skythinker.gptassistant'
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.3.0'
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    // --- 基础 UI 与架构组件 ---
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'com.google.android.material:material:1.6.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     
-    // 保留原有的本地模块依赖
+    // 本地语音识别核心模块 (asr_core)
     implementation project(path: ':asr_core')
     
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    // --- 核心网络库 (DeepSeek/OpenAI 集成) ---
+    // OkHttp 核心库
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    // ★★★ 必须添加：用于支持 AI 流式响应 (SSE) ★★★
+    implementation 'com.squareup.okhttp3:okhttp-sse:4.11.0'
+    
+    // --- 工具库 (JSON 安全解析) ---
+    // 用于处理不规范 JSON，防止 NPE 崩溃
+    implementation 'cn.hutool:hutool-json:5.8.26'
 
-    // --- Markdown 组件 (保留原有配置) ---
+    // --- Markdown 渲染组件 ---
     final def markwon_version = "4.6.2"
     implementation "io.noties.markwon:core:$markwon_version"
     implementation "io.noties.markwon:ext-latex:$markwon_version"
@@ -71,18 +79,18 @@ dependencies {
     implementation "io.noties.markwon:syntax-highlight:$markwon_version"
     annotationProcessor 'io.noties:prism4j-bundler:2.0.0'
 
-    // --- 原有依赖 (保留以防报错) ---
-    implementation group: 'com.unfbx', name: 'chatgpt-java', version: '1.1.5'
+    // --- 语音识别 (ASR) 相关 ---
+    // 华为 HMS 语音识别
     implementation 'com.huawei.hms:ml-computer-voice-asr:3.12.0.301'
+    // 第三方 ChatGPT 客户端库 (保留兼容性)
+    implementation group: 'com.unfbx', name: 'chatgpt-java', version: '1.1.5'
 
-    // --- PDF 处理 (保留原有配置) ---
+    // --- 文档处理 (PDF/Docx 解析) ---
     implementation 'com.itextpdf:itextpdf:5.5.13.3'
     implementation 'com.itextpdf:itext7-core:7.2.5'
 
-    // --- 新增任务依赖 (必须包含) ---
-    // 1. 网络库：用于 DeepSeek/OpenAI 接口调用
-    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
-    
-    // 2. 工具库：用于 JSON 解析，防止 NPE
-    implementation 'cn.hutool:hutool-json:5.8.26'
+    // --- 单元测试 ---
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
