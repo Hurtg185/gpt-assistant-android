@@ -20,6 +20,17 @@ public class GlobalDataHolder {
     public static final String LANG_ZH = "zh-CN";
     public static final String LANG_EN = "en-US";
     public static final String LANG_MM = "my-MM";
+    public static final String LANG_JP = "ja-JP";
+    public static final String LANG_KR = "ko-KR";
+    public static final String LANG_VN = "vi-VN";
+    public static final String LANG_TH = "th-TH";
+    public static final String LANG_LO = "lo-LA";
+    public static final String LANG_RU = "ru-RU";
+    public static final String LANG_KH = "km-KH";
+    public static final String LANG_ID = "id-ID";
+    public static final String LANG_FR = "fr-FR";
+    public static final String LANG_ES = "es-ES";
+    public static final String LANG_DE = "de-DE";
 
     // --- 单例实例 ---
     private static GlobalDataHolder instance;
