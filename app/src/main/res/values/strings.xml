@@ -133,9 +133,10 @@
     <string name="dialog_help_title">Help</string>
     <string name="dialog_help_cancel">Back</string>
     <string name="dialog_help_homepage">Homepage</string>
-    <string name="format_version_latest">Current version: %s · Up-to-date</string>
-    <string name="format_version_available">Update available: %s -> %s</string>
-    <string name="format_version_normal">Current version: %s</string>
+    <string name="format_version_latest">Current version: %1$s · Up-to-date</string>
+    <!-- ★★★ 修复点：添加了 %1$s 和 %2$s 明确占位符顺序 ★★★ -->
+    <string name="format_version_available">Update available: %1$s -> %2$s</string>
+    <string name="format_version_normal">Current version: %1$s</string>
     <string name="text_default_tab_title">Q&amp;A</string>
     <string name="text_default_tab_content">"Please answer: "</string>
     <string name="text_gpt_cancel">Request canceled</string>
@@ -170,7 +171,7 @@
     <string name="text_template_help_title">Template Guide</string>
     <string name="toast_share_template">Template content is copied. You can share it on GitHub Discussion.</string>
     <string name="text_homepage_title">Homepage</string>
-    <string name="text_download_latest">Update available. Download [here](%s).</string>
+    <string name="text_download_latest">Update available. Download [here](%1$s).</string>
     <string name="text_releases_title">Releases</string>
     <string name="toast_update_available">Update available. Please check the settings page for detail.</string>
     <string name="toast_get_releases_failed">Failed to download releases list. Please check project homepage for information.</string>
