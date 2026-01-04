@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 背景颜色 -->
+    <solid android:color="#FFFFFF" />
+    
+    <!-- 顶部的圆角半径，让弹窗顶部看起来更圆润 -->
+    <corners
+        android:topLeftRadius="24dp"
+        android:topRightRadius="24dp" />
+</shape>
