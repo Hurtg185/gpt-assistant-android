@@ -189,6 +189,15 @@ public class MainActivity extends Activity {
         etUserInput = findViewById(R.id.et_user_input);
         btSend = findViewById(R.id.bt_send);
         btAttachment = findViewById(R.id.bt_attachment);
+        
+        // ★★★ 核心修改：按钮变大为 64dp ★★★
+        ViewGroup.LayoutParams sendBtnParams = btSend.getLayoutParams();
+        sendBtnParams.width = dpToPx(64);
+        sendBtnParams.height = dpToPx(64);
+        btSend.setLayoutParams(sendBtnParams);
+        btSend.setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12));
+        btSend.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+
         svChatArea = findViewById(R.id.sv_chat_list);
         llChatList = findViewById(R.id.ll_chat_list);
 
@@ -434,9 +443,24 @@ public class MainActivity extends Activity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
-                if(action.equals("com.skythinker.gptassistant.KEY_SPEECH_START")) { 
+                if(action.equals("com.skythinker.gptassistant.KEY_SPEECH_START")) { // 开始语音识别
                     ttsManager.stop();
-                    asrClient.startRecognize();
+
+                    // ★★★ 核心修复：每次点击时实时检查设置，解决“选谷歌走华为”的Bug ★★★
+                    if(GlobalDataHolder.getAsrUseBaidu()) {
+                        setAsrClient("baidu");
+                    } else if(GlobalDataHolder.getAsrUseWhisper()) {
+                        setAsrClient("whisper");
+                    } else if(GlobalDataHolder.getAsrUseGoogle()) {
+                        setAsrClient("google");
+                    } else {
+                        setAsrClient("hms");
+                    }
+
+                    if (asrClient != null) {
+                        asrClient.startRecognize();
+                    }
+                    
                     asrStartTime = System.currentTimeMillis();
                     etUserInput.setText("");
                     etUserInput.setHint(R.string.text_listening_hint);
@@ -550,42 +574,104 @@ public class MainActivity extends Activity {
     }
 
     // ★★★ 显示语言选择对话框 ★★★
-    private void showLanguageSelectionDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("选择语音识别语言");
+    private void switchToVoiceMode() {
+        if (btSend.getTag() != null && btSend.getTag().equals("VOICE")) return;
 
-        GridLayout gridLayout = new GridLayout(this);
-        gridLayout.setColumnCount(3);
-        gridLayout.setPadding(dpToPx(10), dpToPx(10), dpToPx(10), dpToPx(10));
+        btSend.setImageResource(R.drawable.ic_mic_round); 
+        btSend.setTag("VOICE");
 
-        addLangOption(gridLayout, "🇨🇳\n中文", GlobalDataHolder.LANG_ZH);
-        addLangOption(gridLayout, "🇺🇸\nEnglish", GlobalDataHolder.LANG_EN);
-        addLangOption(gridLayout, "🇲🇲\n缅甸语", GlobalDataHolder.LANG_MM);
+        btSend.setOnClickListener(view -> {
+            Intent broadcastIntent = new Intent("com.skythinker.gptassistant.KEY_SPEECH_START");
+            LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent);
+        });
 
-        ScrollView sv = new ScrollView(this);
-        sv.addView(gridLayout);
-        builder.setView(sv);
-        builder.setNegativeButton("取消", null);
-        builder.show();
+        // 长按弹出美化版两列菜单
+        btSend.setOnLongClickListener(view -> {
+            showLanguageSelectionDialog();
+            return true;
+        });
     }
 
-    private void addLangOption(GridLayout grid, String label, String langCode) {
-        TextView tv = new TextView(this);
-        tv.setText(label);
-        tv.setTextSize(16);
-        tv.setGravity(Gravity.CENTER);
-        tv.setPadding(dpToPx(15), dpToPx(15), dpToPx(15), dpToPx(15));
-        tv.setBackgroundResource(android.R.drawable.btn_default);
+    // ★★★ UI升级：美化版底部两列语言选择面板 ★★★
+    private void showLanguageSelectionDialog() {
+        final Dialog dialog = new Dialog(this, R.style.CustomDialogTheme);
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_language_selector, null);
+        dialog.setContentView(dialogView);
 
-        GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-        params.setMargins(dpToPx(5), dpToPx(5), dpToPx(5), dpToPx(5));
-        tv.setLayoutParams(params);
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setGravity(Gravity.BOTTOM);
+            window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
 
-        tv.setOnClickListener(v -> {
-            GlobalDataHolder.getInstance(this).setCurrentLanguage(langCode);
-            Toast.makeText(this, "已切换为: " + langCode, Toast.LENGTH_SHORT).show();
+        RecyclerView rv = dialogView.findViewById(R.id.rv_languages);
+        rv.setLayoutManager(new GridLayoutManager(this, 2));
+
+        final List<LangItem> langList = new ArrayList<>();
+        langList.add(new LangItem("中文", "🇨🇳", GlobalDataHolder.LANG_ZH));
+        langList.add(new LangItem("English", "🇺🇸", GlobalDataHolder.LANG_EN));
+        langList.add(new LangItem("缅甸语", "🇲🇲", GlobalDataHolder.LANG_MM));
+        langList.add(new LangItem("日本語", "🇯🇵", GlobalDataHolder.LANG_JP));
+        langList.add(new LangItem("韩语", "🇰🇷", GlobalDataHolder.LANG_KR));
+        langList.add(new LangItem("越南语", "🇻🇳", GlobalDataHolder.LANG_VN));
+        langList.add(new LangItem("泰语", "🇹🇭", GlobalDataHolder.LANG_TH));
+        langList.add(new LangItem("俄语", "🇷🇺", GlobalDataHolder.LANG_RU));
+
+        rv.setAdapter(new RecyclerView.Adapter<LangViewHolder>() {
+            @NonNull
+            @Override
+            public LangViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_language, parent, false);
+                return new LangViewHolder(v);
+            }
+            @Override
+            public void onBindViewHolder(@NonNull LangViewHolder holder, int position) {
+                final LangItem item = langList.get(position);
+                holder.tvName.setText(item.name);
+                holder.tvFlag.setText(item.flag);
+                if(item.code.equals(GlobalDataHolder.getInstance(MainActivity.this).getCurrentLanguage())) {
+                    holder.card.setCardBackgroundColor(Color.parseColor("#E3F2FD"));
+                    holder.tvName.setTextColor(Color.parseColor("#1976D2"));
+                } else {
+                    holder.card.setCardBackgroundColor(Color.parseColor("#F8F8F8"));
+                    holder.tvName.setTextColor(Color.parseColor("#333333"));
+                }
+                holder.itemView.setOnClickListener(v -> {
+                    GlobalDataHolder.getInstance(MainActivity.this).setCurrentLanguage(item.code);
+                    Toast.makeText(MainActivity.this, "识别语言已设为: " + item.name, Toast.LENGTH_SHORT).show();
+                    
+                    // ★★★ 核心修复：选完语言立即强制重置引擎，解决选谷歌出华为的问题 ★★★
+                    if(GlobalDataHolder.getAsrUseBaidu()) setAsrClient("baidu");
+                    else if(GlobalDataHolder.getAsrUseWhisper()) setAsrClient("whisper");
+                    else if(GlobalDataHolder.getAsrUseGoogle()) setAsrClient("google");
+                    else setAsrClient("hms");
+                    
+                    dialog.dismiss();
+                });
+            }
+            @Override
+            public int getItemCount() { return langList.size(); }
         });
-        grid.addView(tv);
+
+        dialogView.findViewById(R.id.btn_cancel).setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
+    }
+
+    private static class LangItem {
+        String name, flag, code;
+        LangItem(String n, String f, String c) { this.name = n; this.flag = f; this.code = c; }
+    }
+
+    private static class LangViewHolder extends RecyclerView.ViewHolder {
+        TextView tvName, tvFlag;
+        CardView card;
+        LangViewHolder(View v) {
+            super(v);
+            tvName = v.findViewById(R.id.tv_lang_name);
+            tvFlag = v.findViewById(R.id.tv_flag);
+            card = v.findViewById(R.id.cv_lang_root);
+        }
     }
 
     private void setAsrClient(String type) {
