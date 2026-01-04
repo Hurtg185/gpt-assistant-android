@@ -124,7 +124,7 @@ public class MainActivity extends Activity {
     // ★★★ TTS 替换：使用 TtsManager 替代 TextToSpeech ★★★
     private TtsManager ttsManager;
     private boolean ttsEnabled = true;
-    final private List<String> ttsSentenceSeparator = Arrays.asList("。", ".", "？", "?", "！", "!", "……", "\n", "：", ":");
+    final private List<String> ttsSentenceSeparator = Arrays.asList("。", ".", "？", "?", "！", "!", "……", "\n", "：", ":", "回译：", "回译:");
     private int ttsSentenceEndIndex = 0;
 
     private boolean multiChat = false;
